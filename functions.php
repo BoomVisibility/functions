@@ -95,6 +95,90 @@ add_filter('image_size_names_choose', 'my_image_sizes');
 	return $newsizes;
 }
 
+//Excerpt
+function new_excerpt_more( $more ) {
+	return '...';
+}
+add_filter('excerpt_more', 'new_excerpt_more');
+
+//Order Entries by Last Name *from DCASP
+function wpsites_cpt_loop_filter($query) {
+if ( !is_admin() && $query->is_main_query() ) {
+if ( is_post_type_archive('members') ) {
+     $query->set( 'orderby', 'last_name' );
+     $query->set( 'order', 'ASC' );
+    }
+  }
+}
+ 
+add_action('pre_get_posts','wpsites_cpt_loop_filter');
+
+//add filters for category descriptions *from CDL
+remove_filter( 'pre_term_description', 'wp_filter_kses' );
+remove_filter( 'term_description', 'wp_kses_data' );
+
+add_filter('edit_category_form_fields', 'cat_description');
+function cat_description($tag)
+{
+    ?>
+        <table class="form-table">
+            <tr class="form-field">
+                <th scope="row" valign="top"><label for="description"><?php _ex('Description', 'Taxonomy Description'); ?></label></th>
+                <td>
+                <?php
+                    $settings = array('wpautop' => true, 'media_buttons' => true, 'quicktags' => true, 'textarea_rows' => '15', 'textarea_name' => 'description' );
+                    wp_editor(wp_kses_post($tag->description , ENT_QUOTES, 'UTF-8'), 'cat_description', $settings);
+                ?>
+                <br />
+                <span class="description"><?php _e('The description is not prominent by default; however, some themes may show it.'); ?></span>
+                </td>
+            </tr>
+        </table>
+    <?php
+}
+
+add_filter( 'term_description', 'shortcode_unautop');
+add_filter( 'term_description', 'do_shortcode' );
+
+add_action('admin_head', 'remove_default_category_description');
+function remove_default_category_description()
+{
+    global $current_screen;
+    if ( $current_screen->id == 'edit-category' )
+    {
+    ?>
+        <script type="text/javascript">
+        jQuery(function($) {
+            $('textarea#description').closest('tr.form-field').remove();
+        });
+        </script>
+    <?php
+    }
+}
+
+//Change In Stock / Out of Stock Text on Woocommerce *from East Hill
+add_filter( 'woocommerce_get_availability', 'wcs_custom_get_availability', 1, 2);
+function wcs_custom_get_availability( $availability, $_product ) {
+   
+   	// Change In Stock Text
+    if ( $_product->is_in_stock() ) {
+        $availability['availability'] = __('In Stock', 'woocommerce');
+    }
+    // Change Out of Stock Text
+    if ( ! $_product->is_in_stock() ) {
+    	$availability['availability'] = __('On Backorder', 'woocommerce');
+    }
+    return $availability;
+}
+
+//Change image and color of button for login page
+function login_style() {
+    wp_register_style('login-style', TEMPLATE_DIRECTORY_URI . '/assets/css/login-style.css');
+    wp_enqueue_style('login-style');
+}
+add_action( 'login_enqueue_scripts', 'login_style' );
+
+
 //Add ACF image in RSS Feed *from Perakis
 
 function ld_advanced_custom_field_in_feed($content) {  
