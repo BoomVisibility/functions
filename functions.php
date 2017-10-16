@@ -345,5 +345,22 @@ function is_tree($pid)
     return $match;
   }
 
+//Add Featured Image to RSS *from Wide Plank
+add_filter( 'the_excerpt_rss', 'rgc_add_featured_image_to_feed_excerpt', 1000, 1 );
+function rgc_add_featured_image_to_feed_excerpt( $content ) {
+
+	if ( has_post_thumbnail( get_the_ID() ) ) {
+		$content = get_the_post_thumbnail( get_the_ID(), 'full', array( 'align' => 'center', 'style' => 'display: block;margin-right:20px;' ) ) . $content;
+	}
+	return $content;
+}
+
+//Disable SRCSET *from Wide Plank
+function disable_srcset( $sources ) {
+if (is_feed) {
+return false; }
+}
+add_filter( 'wp_calculate_image_srcset', 'disable_srcset' );
+
 ?>
 
