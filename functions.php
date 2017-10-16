@@ -1,3 +1,4 @@
+<?php
 
 //Standard Sidebars
 function twentytwelve_widgets_init() {
@@ -206,3 +207,90 @@ function ld_advanced_custom_field_in_feed($content) {
     return $content;
 }  
 add_filter('the_content','ld_advanced_custom_field_in_feed');
+
+//Add Browser class from Office Shredding
+add_filter('body_class','browser_body_class');
+function browser_body_class($classes) {
+    global $is_safari, $is_chrome, $is_gecko, $is_winIE, $is_iphone;
+    if($is_safari) $classes[] = 'safari';
+    elseif($is_chrome) $classes[] = 'chrome';
+	elseif($is_gecko) $classes[] = 'firefox';
+    elseif($is_winIE) $classes[] = 'ie';
+    else $classes[] = 'unknown';
+    if($is_iphone) $classes[] = 'iphone';
+    return $classes;
+}
+
+
+/** Remove Export Links from Calendar - Taken from PT Women **/
+class Tribe__Events__Remove__Export__Links {
+
+    public function __construct() {
+        add_action( 'init', array( $this, 'single_event_links' ) );
+        add_action( 'init', array( $this, 'view_links' ) );
+    }
+
+    public function single_event_links() {
+        remove_action(
+            'tribe_events_single_event_after_the_content',
+            array( 'Tribe__Events__iCal', 'single_event_links' )
+        );
+    }
+
+    public function view_links() {
+        remove_filter(
+            'tribe_events_after_footer',
+            array( 'Tribe__Events__iCal', 'maybe_add_link' )
+        );
+    }
+}
+
+new Tribe__Events__Remove__Export__Links();
+
+/**
+ * Remove empty paragraphs created by wpautop()
+ * @author Ryan Hamilton
+ * @link https://gist.github.com/Fantikerz/5557617
+ */
+function remove_empty_p( $content ) {
+    $content = force_balance_tags( $content );
+    $content = preg_replace( '#<p>\s*+(<br\s*/*>)?\s*</p>#i', '', $content );
+    $content = preg_replace( '~\s?<p>(\s|&nbsp;)+</p>\s?~', '', $content );
+    return $content;
+}
+add_filter('the_content', 'remove_empty_p', 20, 1);
+
+//code to remove query strings from scripts for version numbers
+function _remove_script_version( $src ){
+$parts = explode( '?ver', $src );
+return $parts[0];
+}
+add_filter( 'script_loader_src', '_remove_script_version', 15, 1 );
+add_filter( 'style_loader_src', '_remove_script_version', 15, 1 );
+
+/**GForm Submit Button from Ramsey's */
+add_filter( 'gform_next_button', 'my_next_button_markup', 10, 2 );
+function my_next_button_markup( $next_button, $form ) {
+    return "<button class='button' id='gform_submit_button_{$form['id']}'><span>Next Step&#9656;</span></button>";
+}
+
+//Tree Function, from RDD
+function is_tree($pid)
+{
+  global $post;
+
+  $ancestors = get_post_ancestors($post->$pid);
+  $root = count($ancestors) - 1;
+  $parent = $ancestors[$root];
+
+  if(is_page() && (is_page($pid) || $post->post_parent == $pid || in_array($pid, $ancestors)))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+};
+?>
+
