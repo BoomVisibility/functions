@@ -371,3 +371,53 @@ function wp_maintenance_mode() {
 }
 add_action('get_header', 'wp_maintenance_mode');
 
+add_filter('manage_products_posts_columns', 'set_custom_edit_products_columns');
+function set_custom_edit_products_columns($defaults) {
+    $defaults['product-categories'] = 'Categories';
+    return $defaults;
+}
+
+add_action( 'manage_products_posts_custom_column' , 'custom_products_column', 10, 2 );
+
+function custom_products_column( $column, $post_id ) {
+  switch ( $column ) {
+
+    // display a list of the custom taxonomy terms assigned to the post
+    case 'product-categories' :
+      $terms = get_the_term_list( $post_id , 'product-categories' , '' , ', ' , '' );
+      echo is_string( $terms ) ? $terms : '—';
+      break;
+
+  }
+}
+
+add_filter( 'manage_edit-products_sortable_columns', 'set_custom_products_sortable_columns' );
+
+function set_custom_products_sortable_columns( $columns ) {
+  $columns['product-categories'] = 'product-categories';
+
+  return $columns;
+}
+
+if(!function_exists('mbe_sort_custom_column')){
+    function mbe_sort_custom_column($clauses, $wp_query){
+        global $wpdb;
+        if(isset($wp_query->query['orderby']) && $wp_query->query['orderby'] == 'product-categories'){
+            $clauses['join'] .= <<<SQL
+LEFT OUTER JOIN {$wpdb->term_relationships} ON {$wpdb->posts}.ID={$wpdb->term_relationships}.object_id
+LEFT OUTER JOIN {$wpdb->term_taxonomy} USING (term_taxonomy_id)
+LEFT OUTER JOIN {$wpdb->terms} USING (term_id)
+SQL;
+            $clauses['where'] .= "AND (taxonomy = 'product-categories' OR taxonomy IS NULL)";
+            $clauses['groupby'] = "object_id";
+            $clauses['orderby'] = "GROUP_CONCAT({$wpdb->terms}.name ORDER BY name ASC)";
+            if(strtoupper($wp_query->get('order')) == 'ASC'){
+                $clauses['orderby'] .= 'ASC';
+            } else{
+                $clauses['orderby'] .= 'DESC';
+            }
+        }
+        return $clauses;
+    }
+    add_filter('posts_clauses', 'mbe_sort_custom_column', 10, 2);
+}
