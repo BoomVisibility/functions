@@ -421,3 +421,10 @@ SQL;
     }
     add_filter('posts_clauses', 'mbe_sort_custom_column', 10, 2);
 }
+
+//change text to leave a reply on comment form
+function isa_comment_reform ($arg) {
+$arg['title_reply'] = __('Post a Comment');
+return $arg;
+}
+add_filter('comment_form_defaults','isa_comment_reform');
