@@ -221,6 +221,14 @@ function browser_body_class($classes) {
     return $classes;
 }
 
+/** Shortcode with attribute - Taken from Scientifix **/
+function webtreats_resource( $atts, $content = null ) {
+	$atts = shortcode_atts( array(
+			'href' => ''
+		), $atts, 'resource' );
+   return '<div class="resource"><strong>' . do_shortcode($content) . '</strong><a class="button right" href="' . esc_attr( $atts['href'] ) . '">Download</a></div>';
+}
+add_shortcode('resource', 'webtreats_resource');
 
 /** Remove Export Links from Calendar - Taken from PT Women **/
 class Tribe__Events__Remove__Export__Links {
